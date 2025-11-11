@@ -1,35 +1,32 @@
 #pragma once
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <TlHelp32.h>
-#define WIN32_LEAN_AND_MEAN
-
-
-
+#include <cstdint>
 
 namespace VARS {
+    extern uintptr_t baseAddress;
+    extern DWORD processId;
+    extern HANDLE processHandle;
 
-	extern uintptr_t baseAddress;
-	extern DWORD processId;
-	extern HANDLE processHandle;
+    DWORD GetProcess(const wchar_t* Target);
+    uintptr_t GetModuleBaseAddress(DWORD processId, const wchar_t* ModuleTarget);
+    bool Initialize();
 
-	DWORD GetProcess(const wchar_t* Target);
-	extern uintptr_t GetModuleBaseAddress(DWORD processId, const wchar_t* ModuleTarget);
+    template <typename type>
+    type memRead(uintptr_t pointerStatic) {
+        type value = { };
+        if (processHandle && processHandle != INVALID_HANDLE_VALUE) {
+            ReadProcessMemory(processHandle, (LPVOID)pointerStatic, &value, sizeof(type), NULL);
+        }
+        return value;
+    }
 
-	template <typename type>
-	type memRead(uintptr_t pointerStatic) {
-		type value = { };
-		ReadProcessMemory(VARS::processHandle, (LPVOID)pointerStatic, &value, sizeof(type), NULL);
-		return value;
-	}
-	template <typename type>
-	bool memWrite(uintptr_t pointerStatic, type value) {
-		return WriteProcessMemory(VARS::processHandle, (LPVOID)pointerStatic, &value, sizeof(type), NULL);
-	}
-	template <typename type>
-	type add(type x, type y) {
-
-		return x + y;
-	}
-
-
+    template <typename type>
+    bool memWrite(uintptr_t pointerStatic, type value) {
+        if (processHandle && processHandle != INVALID_HANDLE_VALUE) {
+            return WriteProcessMemory(processHandle, (LPVOID)pointerStatic, &value, sizeof(type), NULL);
+        }
+        return false;
+    }
 }
