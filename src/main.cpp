@@ -1,6 +1,15 @@
-#include "memory.h"
+#include "../inclumemory.h"
 #include <iostream>
 #include <thread>
+
+namespace offsets 
+{
+    constexpr auto localPlayer = 0x1BEAEB8;
+    constexpr auto flag = 0x18;
+    constexpr auto jump = 0x1BE4830;
+
+}
+
 int main() {
     if (!VARS::Initialize()) {
         std::cout << "The process not found!" << std::endl;
@@ -14,20 +23,21 @@ int main() {
     std::cout << "Base Address: 0x" << std::hex << VARS::baseAddress << std::dec << std::endl;
 
     while (true) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(2));
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
-        uintptr_t localPlayer = VARS::memRead<uintptr_t>(VARS::baseAddress + 0x1BEAEB8);
-        if (!localPlayer) continue;
-       
-        int32_t m_fFlags = VARS::memRead<int32_t>(localPlayer + 0x18);
+        uintptr_t localPlayer = VARS::memRead<uintptr_t>(VARS::baseAddress + offsets::localPlayer);
+        
+        if (localPlayer)
+        {
+            int32_t onGround = VARS::memRead<int32_t>(localPlayer + offsets::flag);
 
             if (GetAsyncKeyState(VK_SPACE)) {
-                VARS::memWrite(VARS::baseAddress + 0x1BE4830, 65537);
+                VARS::memWrite(VARS::baseAddress + offsets::jump, 65537);
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                VARS::memWrite(VARS::baseAddress + 0x1BE4830, 256);
+                VARS::memWrite(VARS::baseAddress + offsets::jump, 256);
 
+            }
         }
-
     }
 
     std::cout << "\nPress Enter to exit..." << std::endl;
